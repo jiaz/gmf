@@ -16,6 +16,14 @@ void gmf_set_frame_data(AVFrame *frame, int idx, int l_size, uint8_t data) {
     frame->data[idx][l_size] = data;
 }
 
+uint8_t gmf_get_frame_data(AVFrame *frame, int idx, int l_size) {
+	if (!frame) {
+		fprintf(stderr, "frame is NULL\n");
+	}
+
+	return frame->data[idx][l_size];
+}
+
 int gmf_get_frame_line_size(AVFrame *frame, int idx) {
 	return frame->linesize[idx];
 }
@@ -168,6 +176,15 @@ func (this *Frame) ImgAlloc() error {
 	}
 
 	return nil
+}
+
+func (this *Frame) Data(idx int) []byte {
+	size := int(this.avFrame.height) * int(this.avFrame.linesize[idx])
+	return C.GoBytes(unsafe.Pointer(this.avFrame.data[idx]), C.int(size))
+}
+
+func (this *Frame) DataAt(idx int, pos int) uint8 {
+	return uint8(C.gmf_get_frame_data(this.avFrame, C.int(idx), C.int(pos)))
 }
 
 func (this *Frame) SetData(idx int, lineSize int, data int) *Frame {
