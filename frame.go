@@ -34,6 +34,7 @@ import "C"
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"unsafe"
 )
 
@@ -183,8 +184,15 @@ func (this *Frame) Data(idx int) []byte {
 	return C.GoBytes(unsafe.Pointer(this.avFrame.data[idx]), C.int(size))
 }
 
-func (this *Frame) DataAt(idx int, pos int) uint8 {
-	return uint8(C.gmf_get_frame_data(this.avFrame, C.int(idx), C.int(pos)))
+func (this *Frame) DataUnsafe(idx int) []byte {
+	size := int(this.avFrame.height) * int(this.avFrame.linesize[idx])
+	hdr := reflect.SliceHeader{
+		Data: uintptr(unsafe.Pointer(this.avFrame.data[idx])),
+		Len:  size,
+		Cap:  size,
+	}
+	goSlice := *(*[]byte)(unsafe.Pointer(&hdr))
+	return goSlice
 }
 
 func (this *Frame) SetData(idx int, lineSize int, data int) *Frame {
